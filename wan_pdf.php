@@ -29,7 +29,7 @@ function value_entity_decode($html)
 {
 //replace each value entity by its respective char
   preg_match_all('|&#(.*?);|',$html,$temparray);
-  foreach($temparray[1] as $val) $html = str_replace("&#".$val.";",utf8_encode(chr($val)),$html);
+  foreach($temparray[1] as $val) $html = str_replace('&#'.$val.';',utf8_encode(chr($val)),$html);
   return $html;
 }
 
@@ -79,13 +79,13 @@ function wan_pdf_replacechars( $body )
     $filedir = $prefs['file_base_path'];
 
     if ($show_body == 'y') {
-      if ($thisarticle['body'] != "") {
+      if ($thisarticle['body'] != '') {
         //$body = "<div class=\"article_body\">".$thisarticle['body']."</div>";
         $body = $thisarticle['body'];
       }
     }
     if ($show_excerpt == 'y') {
-      if ($thisarticle['excerpt'] != "") {
+      if ($thisarticle['excerpt'] != '') {
         //$excerpt = "<div class=\"excerpt\">".$thisarticle['excerpt']."</div>";
         $excerpt = $thisarticle['excerpt'];
       }
@@ -98,15 +98,15 @@ function wan_pdf_replacechars( $body )
     $article_hash = md5($css.$title.$excerpt.$body);
 
     // Check if pdf already exists for this article
-    $pattern = $article_id."_%";
-    $rs = safe_row("id, description, filename", 'txp_file', "category = '$file_category' AND description LIKE '$pattern'");
+    $pattern = $article_id.'_%';
+    $rs = safe_row('id, description, filename', 'txp_file', "category = '$file_category' AND description LIKE '$pattern'");
 
     if (count($rs) > 0) {
       $pdf_exists = true;
       $file_id = $rs['id'];
       $pdf_filename = $rs['filename'];
       // pdf exists, so check if it's up to date
-      $description = explode("_", $rs['description']);
+      $description = explode('_', $rs['description']);
 
       if ($description[1] == $article_hash) {
         $pdf_up_to_date = true;
@@ -114,8 +114,8 @@ function wan_pdf_replacechars( $body )
     }
 
     // Delete old PDF
-    if (file_exists($filedir.DS.$title.".pdf")) {
-      unlink($filedir.DS.$title.".pdf");
+    if (file_exists($filedir.DS.$title.'.pdf')) {
+      unlink($filedir.DS.$title.'.pdf');
       $pdf_up_to_date = false;
     }
 
@@ -123,21 +123,21 @@ function wan_pdf_replacechars( $body )
     if (!$pdf_exists OR !$pdf_up_to_date) {
 
       // generate identifier
-      $identifier = $article_id."_".$article_hash;
+      $identifier = $article_id.'_'.$article_hash;
 
-      $pdf_filename = $article_id."_".$thisarticle['url_title'].".pdf";
-      $pdf_filename = str_replace("'", "", $pdf_filename);
+      $pdf_filename = $article_id.'_'.$thisarticle['url_title'].'.pdf';
+      $pdf_filename = str_replace("'", '', $pdf_filename);
 
       $x_title = utf8_decode($title);
 
       // check if textile is on or off
       if (strcmp("<p>", substr($excerpt, 0, 3)) != 0) {
-        $excerpt = "<p>".$excerpt."</p>";
+        $excerpt = '<p>'.$excerpt.'</p>';
         //$x_title = value_entity_decode($title);
       }
 
-      if (strcmp("<p>", substr($body, 0, 3)) != 0) {
-        $body = "<p>".$body."</p>";
+      if (strcmp('<p>', substr($body, 0, 3)) != 0) {
+        $body = '<p>'.$body.'</p>';
         $x_title = value_entity_decode($title);
       } else {
 		    $body = value_entity_decode($body);
@@ -151,7 +151,7 @@ function wan_pdf_replacechars( $body )
       $body = wan_pdf_replacechars($body);
       
       if (is_writable($tempdir.DS)) {
-        $file = fopen($tempdir.DS.$identifier.".html", "w");
+        $file = fopen($tempdir.DS.$identifier.'.html', 'w');
         $xhtml_header = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
             \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
             <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">
@@ -161,12 +161,12 @@ function wan_pdf_replacechars( $body )
             </head>
             <body>";
         //fwrite($file, utf8_decode($xhtml_header."<h1>".$thisarticle['title']."</h1>\n".$excerpt.$body."</body></html>"));
-        fwrite($file, $xhtml_header."<h1>".$title."</h1>\n".$excerpt.$body."</body></html>");
+        fwrite($file, $xhtml_header.'<h1>'.$title.'</h1>'.n.$excerpt.$body.'</body></html>');
         fclose($file);
 
         // write CSS to file
 		  if ($css) {
-		      $cssfile = fopen($tempdir.DS."csstemp.css", "w");
+		      $cssfile = fopen($tempdir.DS.'csstemp.css', 'w');
           fwrite($cssfile, base64_decode($css));
           fclose($cssfile);
         }
@@ -183,7 +183,7 @@ function wan_pdf_replacechars( $body )
         include_once(X_PATH.DS.'classes'.DS.'x2fpdf.php');
 
         // Create new xhtml2pdf-object
-        $xpdf = new xhtml2pdf ($tempdir.DS.$identifier.".html", $tempdir.DS."csstemp.css", $config);
+        $xpdf = new xhtml2pdf ($tempdir.DS.$identifier.'.html', $tempdir.DS.'csstemp.css', $config);
         $xpdf->SetTitle(utf8_decode($title));
         $xpdf->SetAuthor(utf8_decode($thisarticle['authorid']));
         $xpdf->SetCreator('XHTML2PDF v0.2.5');
@@ -195,15 +195,15 @@ function wan_pdf_replacechars( $body )
 
         // remove HTML-file, remove CSS-file
         if ($debug != 'y') {
-          unlink($tempdir.DS.$identifier.".html");
-          unlink($tempdir.DS."csstemp.css");
+          unlink($tempdir.DS.$identifier.'.html');
+          unlink($tempdir.DS.'csstemp.css');
         }
       }
 
 
       if (!$pdf_exists) {
         // Add pdf to textpattern-db
-        $file_id = safe_insert("txp_file",
+        $file_id = safe_insert('txp_file',
 			       "filename = '$pdf_filename',
 			       category = '$file_category',
 			       permissions = '',
@@ -212,7 +212,7 @@ function wan_pdf_replacechars( $body )
 
       } else if (!$pdf_up_to_date) {
         // Update textpattern-db
-        safe_update("txp_file", "description = '$identifier', filename = '$pdf_filename'", "id = '$file_id'");
+        safe_update('txp_file', "description = '$identifier', filename = '$pdf_filename'", "id = '$file_id'");
 
       }
     }
@@ -220,7 +220,7 @@ function wan_pdf_replacechars( $body )
 
 		// Generate Link to PDF
 		if ($class != '') {
-      $class = " class=\"".$class."\"";
+      $class = ' class="'.$class.'"';
     }
 
     if ($image != '') {
