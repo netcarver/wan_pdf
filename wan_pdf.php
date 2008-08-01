@@ -132,7 +132,7 @@ function wan_pdf_replacechars( $body )
       $x_title = utf8_decode($title);
 
       // check if textile is on or off
-      if (strcmp("<p>", substr($excerpt, 0, 3)) != 0) {
+      if (strcmp('<p>', substr($excerpt, 0, 3)) != 0) {
         $excerpt = '<p>'.$excerpt.'</p>';
         //$x_title = value_entity_decode($title);
       }
