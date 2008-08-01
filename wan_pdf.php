@@ -183,7 +183,7 @@ function wan_pdf_replacechars( $body )
         include_once(X_PATH.'/classes/x2fpdf.php');
 
         // Create new xhtml2pdf-object
-        $xpdf = new xhtml2pdf ($tempdir."/".$identifier.".html", $tempdir."/csstemp.css", $config);
+        $xpdf = new xhtml2pdf ($tempdir.DS.$identifier.".html", $tempdir.DS."csstemp.css", $config);
         $xpdf->SetTitle(utf8_decode($title));
         $xpdf->SetAuthor(utf8_decode($thisarticle['authorid']));
         $xpdf->SetCreator('XHTML2PDF v0.2.5');
@@ -191,12 +191,12 @@ function wan_pdf_replacechars( $body )
         $xpdf->SetKeywords(utf8_decode($thisarticle['keywords']));
 
         // output pdf
-        $xpdf->output($filedir."/".$pdf_filename, 'F');
+        $xpdf->output($filedir.DS.$pdf_filename, 'F');
 
         // remove HTML-file, remove CSS-file
         if ($debug != 'y') {
-          unlink($tempdir."/".$identifier.".html");
-          unlink($tempdir."/csstemp.css");
+          unlink($tempdir.DS.$identifier.".html");
+          unlink($tempdir.DS."csstemp.css");
         }
       }
 
