@@ -1,0 +1,5 @@
+h1. wan_pdf (alt version)
+
+Released under the GPLv2 licence.
+
+This is a plugin for "textpattern":http://textpattern.com
