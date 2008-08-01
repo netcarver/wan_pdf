@@ -33,7 +33,27 @@ function value_entity_decode($html)
   return $html;
 }
 
-
+function wan_pdf_replacechars( $body )
+{
+	// left single quote
+	$body = str_replace('&#8216;', '&#145;', $body); 
+	// right single quote
+	$body = str_replace('&#8217;', '&#146;', $body); 
+	// left double quote
+	//    $body = str_replace('&#8220;', '&#147;', $body); 
+	// low left double quote for German
+	$body = str_replace('&#8220;', '&#132;', $body);  
+	//  right double quote
+	$body = str_replace('&#8221;', '&#148;', $body); 
+	// en dash
+	$body = str_replace('&#8211;', '&#150;', $body); 
+	// em dash
+	$body = str_replace('&#8212;', '&#151;', $body); 
+	// Euro-Sign
+	$body = str_replace('€', '&#128;', $body); 
+	// bullet
+	$body = str_replace('&#8226;', '&#145;', $body);
+}
 
   function wan_pdf($atts) {
     global $thisarticle, $sitename, $permlink_mode, $prefs, $txpcfg;;
@@ -128,6 +148,8 @@ function value_entity_decode($html)
       $body = str_replace('<img src="/textpattern', '<img src="http://'.$prefs['siteurl'], $body);
 
       // generate HTML first
+      $body = wan_pdf_replacechars($body);
+      
       if (is_writable($tempdir."/")) {
         $file = fopen($tempdir."/".$identifier.".html", "w");
         $xhtml_header = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
