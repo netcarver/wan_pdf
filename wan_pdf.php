@@ -114,8 +114,9 @@ function wan_pdf_replacechars( $body )
     }
 
     // Delete old PDF
-    if (file_exists($filedir.DS.$title.'.pdf')) {
-      unlink($filedir.DS.$title.'.pdf');
+    $tmp_pdf_name = $filedir.DS.$title.'.pdf';
+    if (file_exists($tmp_pdf_name)) {
+      unlink($tmp_pdf_name);
       $pdf_up_to_date = false;
     }
 
@@ -151,7 +152,8 @@ function wan_pdf_replacechars( $body )
       $body = wan_pdf_replacechars($body);
       
       if (is_writable($tempdir.DS)) {
-        $file = fopen($tempdir.DS.$identifier.'.html', 'w');
+        $filename = $tempdir.DS.$identifier.'.html';
+        $file = fopen($filename, 'w');
         $xhtml_header = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
             \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
             <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">
@@ -165,8 +167,9 @@ function wan_pdf_replacechars( $body )
         fclose($file);
 
         // write CSS to file
+        $css_filename = $tempdir.DS.'csstemp.css';
 		  if ($css) {
-		      $cssfile = fopen($tempdir.DS.'csstemp.css', 'w');
+		      $cssfile = fopen($css_filename, 'w');
           fwrite($cssfile, base64_decode($css));
           fclose($cssfile);
         }
@@ -183,7 +186,7 @@ function wan_pdf_replacechars( $body )
         include_once(X_PATH.DS.'classes'.DS.'x2fpdf.php');
 
         // Create new xhtml2pdf-object
-        $xpdf = new xhtml2pdf ($tempdir.DS.$identifier.'.html', $tempdir.DS.'csstemp.css', $config);
+        $xpdf = new xhtml2pdf ($filename, $css_filename, $config);
         $xpdf->SetTitle(utf8_decode($title));
         $xpdf->SetAuthor(utf8_decode($thisarticle['authorid']));
         $xpdf->SetCreator('XHTML2PDF v0.2.5');
@@ -195,8 +198,8 @@ function wan_pdf_replacechars( $body )
 
         // remove HTML-file, remove CSS-file
         if ($debug != 'y') {
-          unlink($tempdir.DS.$identifier.'.html');
-          unlink($tempdir.DS.'csstemp.css');
+          unlink($filename);
+          unlink($css_filename);
         }
       }
 
