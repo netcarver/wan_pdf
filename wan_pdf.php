@@ -114,8 +114,8 @@ function wan_pdf_replacechars( $body )
     }
 
     // Delete old PDF
-    if (file_exists($filedir."/".$title.".pdf")) {
-      unlink($filedir."/".$title.".pdf");
+    if (file_exists($filedir.DS.$title.".pdf")) {
+      unlink($filedir.DS.$title.".pdf");
       $pdf_up_to_date = false;
     }
 
@@ -150,8 +150,8 @@ function wan_pdf_replacechars( $body )
       // generate HTML first
       $body = wan_pdf_replacechars($body);
       
-      if (is_writable($tempdir."/")) {
-        $file = fopen($tempdir."/".$identifier.".html", "w");
+      if (is_writable($tempdir.DS)) {
+        $file = fopen($tempdir.DS.$identifier.".html", "w");
         $xhtml_header = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
             \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
             <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">
@@ -166,13 +166,13 @@ function wan_pdf_replacechars( $body )
 
         // write CSS to file
 		  if ($css) {
-		      $cssfile = fopen($tempdir."/csstemp.css", "w");
+		      $cssfile = fopen($tempdir.DS."csstemp.css", "w");
           fwrite($cssfile, base64_decode($css));
           fclose($cssfile);
         }
 
         // Define some variables for PDF
-        define('X_PATH', $txpcfg['txpath'].'/lib/xhtml2pdf');
+        define('X_PATH', $txpcfg['txpath'].DS.'lib'.DS.'xhtml2pdf');
         //define('X_NAME', utf8_decode($sitename));
         //define('X_TITLE', html_entity_decode(utf8_decode($thisarticle['title'])));
         //$x_name = utf8_decode($sitename);
@@ -180,7 +180,7 @@ function wan_pdf_replacechars( $body )
         $x_name = $sitename;
         //
 
-        include_once(X_PATH.'/classes/x2fpdf.php');
+        include_once(X_PATH.DS.'classes'.DS.'x2fpdf.php');
 
         // Create new xhtml2pdf-object
         $xpdf = new xhtml2pdf ($tempdir.DS.$identifier.".html", $tempdir.DS."csstemp.css", $config);
