@@ -27,10 +27,10 @@ $plugin['type'] = '0';
 
 function value_entity_decode($html)
 {
-//replace each value entity by its respective char
-  preg_match_all('|&#(.*?);|',$html,$temparray);
-  foreach($temparray[1] as $val) $html = str_replace('&#'.$val.';',utf8_encode(chr($val)),$html);
-  return $html;
+	//replace each value entity by its respective char
+	preg_match_all('|&#(.*?);|',$html,$temparray);
+	foreach($temparray[1] as $val) $html = str_replace('&#'.$val.';',utf8_encode(chr($val)),$html);
+	return $html;
 }
 
 function wan_pdf_replacechars( $body )
@@ -55,10 +55,11 @@ function wan_pdf_replacechars( $body )
 	$body = str_replace('&#8226;', '&#145;', $body);
 }
 
-  function wan_pdf($atts) {
-    global $thisarticle, $sitename, $permlink_mode, $prefs, $txpcfg;;
+function wan_pdf($atts)
+{
+	global $thisarticle, $sitename, $permlink_mode, $prefs, $txpcfg;;
 
-    extract(lAtts(array(
+	extract(lAtts(array(
 			'class'  => '',
 			'pdf_css_class' => 'article_pdf',
 			'name' => 'This article as a pdf',
@@ -69,174 +70,197 @@ function wan_pdf_replacechars( $body )
 			'debug' => 'n'
 		),$atts));
 
-    $pdf_exists = false;
-    $pdf_up_to_date = false;
-    $article_id = $thisarticle['thisid'];
-    $title = $thisarticle['title'];
-    $body = '';
-    $excerpt = '';
-    $tempdir = $prefs['tempdir'];
-    $filedir = $prefs['file_base_path'];
+	$pdf_exists = false;
+	$pdf_up_to_date = false;
+	$article_id = $thisarticle['thisid'];
+	$title = $thisarticle['title'];
+	$body = '';
+	$excerpt = '';
+	$tempdir = $prefs['tempdir'];
+	$filedir = $prefs['file_base_path'];
 
-    if ($show_body == 'y') {
-      if ($thisarticle['body'] != '') {
-        //$body = "<div class=\"article_body\">".$thisarticle['body']."</div>";
-        $body = $thisarticle['body'];
-      }
-    }
-    if ($show_excerpt == 'y') {
-      if ($thisarticle['excerpt'] != '') {
-        //$excerpt = "<div class=\"excerpt\">".$thisarticle['excerpt']."</div>";
-        $excerpt = $thisarticle['excerpt'];
-      }
-    }
-
-    // Read CSS-file for pdf-output
-    $css = safe_field('css','txp_css',"name='".doSlash($pdf_css_class)."'");
-
-    // Calculate hash-value for article
-    $article_hash = md5($css.$title.$excerpt.$body);
-
-    // Check if pdf already exists for this article
-    $pattern = $article_id.'_%';
-    $rs = safe_row('id, description, filename', 'txp_file', "category = '$file_category' AND description LIKE '$pattern'");
-
-    if (count($rs) > 0) {
-      $pdf_exists = true;
-      $file_id = $rs['id'];
-      $pdf_filename = $rs['filename'];
-      // pdf exists, so check if it's up to date
-      $description = explode('_', $rs['description']);
-
-      if ($description[1] == $article_hash) {
-        $pdf_up_to_date = true;
-      }
-    }
-
-    // Delete old PDF
-    $tmp_pdf_name = $filedir.DS.$title.'.pdf';
-    if (file_exists($tmp_pdf_name)) {
-      unlink($tmp_pdf_name);
-      $pdf_up_to_date = false;
-    }
-
-    // if pdf has to be generated (or re-generated)
-    if (!$pdf_exists OR !$pdf_up_to_date) {
-
-      // generate identifier
-      $identifier = $article_id.'_'.$article_hash;
-
-      $pdf_filename = $article_id.'_'.$thisarticle['url_title'].'.pdf';
-      $pdf_filename = str_replace("'", '', $pdf_filename);
-
-      $x_title = utf8_decode($title);
-
-      // check if textile is on or off
-      if (strcmp('<p>', substr($excerpt, 0, 3)) != 0) {
-        $excerpt = '<p>'.$excerpt.'</p>';
-        //$x_title = value_entity_decode($title);
-      }
-
-      if (strcmp('<p>', substr($body, 0, 3)) != 0) {
-        $body = '<p>'.$body.'</p>';
-        $x_title = value_entity_decode($title);
-      } else {
-		    $body = value_entity_decode($body);
-	    }
-
-      // change image-urls to http://...
-      $excerpt = str_replace('<img src="/textpattern', '<img src="http://'.$prefs['siteurl'], $excerpt);
-      $body = str_replace('<img src="/textpattern', '<img src="http://'.$prefs['siteurl'], $body);
-
-      // generate HTML first
-      $body = wan_pdf_replacechars($body);
-      
-      if (is_writable($tempdir.DS)) {
-        $filename = $tempdir.DS.$identifier.'.html';
-        $file = fopen($filename, 'w');
-        $xhtml_header = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
-            \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
-            <html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">
-            <head>
-            <meta http-equiv=\"Content-Type\" content=\"text/HTML;\"  />
-            <title>".$title."</title>
-            </head>
-            <body>";
-        //fwrite($file, utf8_decode($xhtml_header."<h1>".$thisarticle['title']."</h1>\n".$excerpt.$body."</body></html>"));
-        fwrite($file, $xhtml_header.'<h1>'.$title.'</h1>'.n.$excerpt.$body.'</body></html>');
-        fclose($file);
-
-        // write CSS to file
-        $css_filename = $tempdir.DS.'csstemp.css';
-		  if ($css) {
-		      $cssfile = fopen($css_filename, 'w');
-          fwrite($cssfile, base64_decode($css));
-          fclose($cssfile);
-        }
-
-        // Define some variables for PDF
-        define('X_PATH', $txpcfg['txpath'].DS.'lib'.DS.'xhtml2pdf');
-        //define('X_NAME', utf8_decode($sitename));
-        //define('X_TITLE', html_entity_decode(utf8_decode($thisarticle['title'])));
-        //$x_name = utf8_decode($sitename);
-        //$x_title = html_entity_decode(utf8_decode($title));
-        $x_name = $sitename;
-        //
-
-        include_once(X_PATH.DS.'classes'.DS.'x2fpdf.php');
-
-        // Create new xhtml2pdf-object
-        $xpdf = new xhtml2pdf ($filename, $css_filename, $config);
-        $xpdf->SetTitle(utf8_decode($title));
-        $xpdf->SetAuthor(utf8_decode($thisarticle['authorid']));
-        $xpdf->SetCreator('XHTML2PDF v0.2.5');
-        $xpdf->SetSubject(utf8_decode($title));
-        $xpdf->SetKeywords(utf8_decode($thisarticle['keywords']));
-
-        // output pdf
-        $xpdf->output($filedir.DS.$pdf_filename, 'F');
-
-        // remove HTML-file, remove CSS-file
-        if ($debug != 'y') {
-          unlink($filename);
-          unlink($css_filename);
-        }
-      }
-
-
-      if (!$pdf_exists) {
-        // Add pdf to textpattern-db
-        $file_id = safe_insert('txp_file',
-			       "filename = '$pdf_filename',
-			       category = '$file_category',
-			       permissions = '',
-			       description = '$identifier'
-		    ");
-
-      } else if (!$pdf_up_to_date) {
-        // Update textpattern-db
-        safe_update('txp_file', "description = '$identifier', filename = '$pdf_filename'", "id = '$file_id'");
-
-      }
-    }
-
-
-		// Generate Link to PDF
-		if ($class != '') {
-      $class = ' class="'.$class.'"';
-    }
-
-    if ($image != '') {
-      $name = image(array('id' => $image));
-    }
-
-		if ($permlink_mode == 'messy') {
-			$url = '<a href="http://'.$prefs['siteurl'].'/index.php?s=file_download&id='.$file_id.'" title="download file '.$pdf_filename.'"'.$class.'>'.$name.'</a>';
-		} else {
-			$url = '<a href="http://'.$prefs['siteurl'].'/'.gTxt('file_download').'/'.$file_id.'" title="download file '.$pdf_filename.'"'.$class.'>'.$name.'</a>';
+	if ($show_body == 'y')
+	{
+		if ($thisarticle['body'] != '')
+		{
+			//$body = "<div class=\"article_body\">".$thisarticle['body']."</div>";
+			$body = $thisarticle['body'];
 		}
-    return $url;
-  }
+	}
+	if ($show_excerpt == 'y')
+	{
+		if ($thisarticle['excerpt'] != '')
+		{
+			//$excerpt = "<div class=\"excerpt\">".$thisarticle['excerpt']."</div>";
+			$excerpt = $thisarticle['excerpt'];
+		}
+	}
+
+	// Read CSS-file for pdf-output
+	$css = safe_field('css','txp_css',"name='".doSlash($pdf_css_class)."'");
+
+	// Calculate hash-value for article
+	$article_hash = md5($css.$title.$excerpt.$body);
+
+	// Check if pdf already exists for this article
+	$pattern = $article_id.'_%';
+	$rs = safe_row('id, description, filename', 'txp_file', "category = '$file_category' AND description LIKE '$pattern'");
+
+	if (count($rs) > 0)
+	{
+		$pdf_exists = true;
+		$file_id = $rs['id'];
+		$pdf_filename = $rs['filename'];
+		// pdf exists, so check if it's up to date
+		$description = explode('_', $rs['description']);
+
+		if ($description[1] == $article_hash)
+		{
+			$pdf_up_to_date = true;
+		}
+	}
+
+	// Delete old PDF
+	$tmp_pdf_name = $filedir.DS.$title.'.pdf';
+	if (file_exists($tmp_pdf_name))
+	{
+		unlink($tmp_pdf_name);
+		$pdf_up_to_date = false;
+	}
+
+	// if pdf has to be generated (or re-generated)
+	if (!$pdf_exists OR !$pdf_up_to_date)
+	{
+
+		// generate identifier
+		$identifier = $article_id.'_'.$article_hash;
+
+		$pdf_filename = $article_id.'_'.$thisarticle['url_title'].'.pdf';
+		$pdf_filename = str_replace("'", '', $pdf_filename);
+
+		$x_title = utf8_decode($title);
+
+		// check if textile is on or off
+		if (strcmp('<p>', substr($excerpt, 0, 3)) != 0)
+		{
+			$excerpt = '<p>'.$excerpt.'</p>';
+			//$x_title = value_entity_decode($title);
+		}
+
+		if (strcmp('<p>', substr($body, 0, 3)) != 0)
+		{
+			$body = '<p>'.$body.'</p>';
+			$x_title = value_entity_decode($title);
+		}
+		else
+		{
+			$body = value_entity_decode($body);
+		}
+
+		// change image-urls to http://...
+		$excerpt = str_replace('<img src="/textpattern', '<img src="http://'.$prefs['siteurl'], $excerpt);
+		$body = str_replace('<img src="/textpattern', '<img src="http://'.$prefs['siteurl'], $body);
+
+		// generate HTML first
+		$body = wan_pdf_replacechars($body);
+
+		if (is_writable($tempdir.DS))
+		{
+			$filename = $tempdir.DS.$identifier.'.html';
+			$file = fopen($filename, 'w');
+			$xhtml_header = "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\"
+				\"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">
+				<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">
+				<head>
+				<meta http-equiv=\"Content-Type\" content=\"text/HTML;\"  />
+				<title>".$title."</title>
+				</head>
+				<body>";
+			//fwrite($file, utf8_decode($xhtml_header."<h1>".$thisarticle['title']."</h1>\n".$excerpt.$body."</body></html>"));
+			fwrite($file, $xhtml_header.'<h1>'.$title.'</h1>'.n.$excerpt.$body.'</body></html>');
+			fclose($file);
+
+			// write CSS to file
+			$css_filename = $tempdir.DS.'csstemp.css';
+			if ($css) 
+			{
+				$cssfile = fopen($css_filename, 'w');
+				fwrite($cssfile, base64_decode($css));
+				fclose($cssfile);
+			}
+
+			// Define some variables for PDF
+			define('X_PATH', $txpcfg['txpath'].DS.'lib'.DS.'xhtml2pdf');
+			//define('X_NAME', utf8_decode($sitename));
+			//define('X_TITLE', html_entity_decode(utf8_decode($thisarticle['title'])));
+			//$x_name = utf8_decode($sitename);
+			//$x_title = html_entity_decode(utf8_decode($title));
+			$x_name = $sitename;
+			//
+
+			include_once(X_PATH.DS.'classes'.DS.'x2fpdf.php');
+
+			// Create new xhtml2pdf-object
+			$xpdf = new xhtml2pdf ($filename, $css_filename, $config);
+			$xpdf->SetTitle(utf8_decode($title));
+			$xpdf->SetAuthor(utf8_decode($thisarticle['authorid']));
+			$xpdf->SetCreator('XHTML2PDF v0.2.5');
+			$xpdf->SetSubject(utf8_decode($title));
+			$xpdf->SetKeywords(utf8_decode($thisarticle['keywords']));
+
+			// output pdf
+			$xpdf->output($filedir.DS.$pdf_filename, 'F');
+
+			// remove HTML-file, remove CSS-file
+			if ($debug != 'y')
+			{
+				unlink($filename);
+				unlink($css_filename);
+			}
+		}
+
+
+		if (!$pdf_exists)
+		{
+			// Add pdf to textpattern-db
+			$file_id = safe_insert('txp_file',
+			"filename = '$pdf_filename',
+			category = '$file_category',
+			permissions = '',
+			description = '$identifier'
+			");
+		}
+		else if (!$pdf_up_to_date) 
+		{
+		// Update textpattern-db
+		safe_update('txp_file', "description = '$identifier', filename = '$pdf_filename'", "id = '$file_id'");
+		}
+	}
+
+
+	// Generate Link to PDF
+	if ($class != '')
+	{
+		$class = ' class="'.$class.'"';
+	}
+
+	if ($image != '')
+	{
+		$name = image(array('id' => $image));
+	}
+
+	if ($permlink_mode == 'messy')
+	{
+		$url = '<a href="http://'.$prefs['siteurl'].'/index.php?s=file_download&id='.$file_id.'" title="download file '.$pdf_filename.'"'.$class.'>'.$name.'</a>';
+	}
+	else
+	{
+		$url = '<a href="http://'.$prefs['siteurl'].'/'.gTxt('file_download').'/'.$file_id.'" title="download file '.$pdf_filename.'"'.$class.'>'.$name.'</a>';
+	}
+
+	return $url;
+}
+
 # --- END PLUGIN CODE ---
 if (0) {
 ?>
